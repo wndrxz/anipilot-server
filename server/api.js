@@ -7,7 +7,7 @@ const ai = require("./ai");
 const search = require("./search");
 const lazyCron = require("./cron");
 
-// Lazy cron на каждый запрос (throttled внутри)
+// Lazy cron on every request (throttled inside)
 router.use((req, res, next) => {
   lazyCron().catch(() => {});
   next();
@@ -17,7 +17,7 @@ router.use((req, res, next) => {
    UserScript API (JWT auth)
    ═══════════════════════════════════ */
 
-// Привязка: код → токен
+// Auth: code → token
 router.post("/auth/verify", async (req, res) => {
   try {
     const { code } = req.body;
@@ -30,7 +30,6 @@ router.post("/auth/verify", async (req, res) => {
     const token = auth.signToken(user.id, user.telegram_id);
     await db.setToken(user.id, token);
 
-    // Уведомить в Telegram
     await notify.tg("sendMessage", {
       chat_id: user.telegram_id,
       text: "✅ *Скрипт привязан!*\nAniPilot подключён к Telegram.",
@@ -48,7 +47,7 @@ router.post("/auth/verify", async (req, res) => {
   }
 });
 
-// Heartbeat + синхронизация состояния
+// Heartbeat + state sync
 router.post("/heartbeat", auth.userAuth, async (req, res) => {
   try {
     const { state: s } = req.body;
@@ -83,7 +82,7 @@ router.post("/heartbeat", auth.userAuth, async (req, res) => {
   }
 });
 
-// Получить команды (polling)
+// Get pending commands (polling)
 router.get("/commands", auth.userAuth, async (req, res) => {
   try {
     res.json({ commands: await db.getPending(req.user.id) });
@@ -92,7 +91,7 @@ router.get("/commands", auth.userAuth, async (req, res) => {
   }
 });
 
-// Команда выполнена
+// Mark command done
 router.post("/commands/:id/done", auth.userAuth, async (req, res) => {
   try {
     await db.markDone(parseInt(req.params.id), req.user.id);
@@ -102,7 +101,7 @@ router.post("/commands/:id/done", auth.userAuth, async (req, res) => {
   }
 });
 
-// Событие (крэш, завершение и т.д.)
+// Event (crash, complete, etc.)
 router.post("/event", auth.userAuth, async (req, res) => {
   try {
     const { type, payload } = req.body;
@@ -114,7 +113,7 @@ router.post("/event", auth.userAuth, async (req, res) => {
   }
 });
 
-// Скрипт уходит в офлайн
+// Script going offline
 router.post("/offline", auth.userAuth, async (req, res) => {
   try {
     await db.upsertState(req.user.id, { is_online: false });
@@ -124,11 +123,48 @@ router.post("/offline", auth.userAuth, async (req, res) => {
   }
 });
 
+// Recommendations (UserScript JWT auth)
+router.post("/recommend", auth.userAuth, async (req, res) => {
+  try {
+    const { history } = req.body;
+
+    let hist = history;
+    if (!hist || hist.length < 2) {
+      // Fallback: get from state
+      const state = await db.getState(req.user.id);
+      const h = state?.history || [];
+      if (h.length < 2)
+        return res.status(400).json({ error: "Need 2+ watched anime" });
+      hist = h
+        .slice(0, 10)
+        .map((x) => ({ title: x.title, genres: x.genres || "" }));
+    }
+
+    const recs = await ai.recommend(hist.slice(0, 10));
+    const results = [];
+
+    for (const rec of recs) {
+      const queries = [rec.query, rec.title_ru, rec.title_en].filter(Boolean);
+      if (!queries.length) continue;
+      try {
+        const found = await search.search(queries);
+        if (found.length) {
+          results.push({ ...found[0], reason: rec.reason });
+        }
+      } catch {}
+    }
+
+    res.json({ ok: true, results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /* ═══════════════════════════════════
    Mini App API (initData auth)
    ═══════════════════════════════════ */
 
-// Получить состояние
+// Get state
 router.get("/webapp/state", auth.miniAuth, async (req, res) => {
   try {
     const state = await db.getState(req.user.id);
@@ -144,19 +180,20 @@ router.get("/webapp/state", auth.miniAuth, async (req, res) => {
   }
 });
 
-// ИИ-поиск
+// AI search
 router.post("/webapp/search", auth.miniAuth, async (req, res) => {
   try {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "No query" });
 
     const aiRes = await ai.ask(query);
-    if (!aiRes.found)
+    if (!aiRes.found) {
       return res.json({
         ok: true,
         found: false,
         suggestions: aiRes.suggestions,
       });
+    }
 
     const queries = [
       ...(aiRes.search_queries || []),
@@ -186,7 +223,7 @@ router.post("/webapp/search", auth.miniAuth, async (req, res) => {
   }
 });
 
-// Отправить команду скрипту
+// Send command to script
 router.post("/webapp/command", auth.miniAuth, async (req, res) => {
   try {
     const { type, payload } = req.body;
@@ -202,7 +239,7 @@ router.post("/webapp/command", auth.miniAuth, async (req, res) => {
   }
 });
 
-// Марафон управление
+// Marathon management
 router.post("/webapp/marathon", auth.miniAuth, async (req, res) => {
   try {
     const { action, payload } = req.body;
@@ -211,8 +248,9 @@ router.post("/webapp/marathon", auth.miniAuth, async (req, res) => {
     switch (action) {
       case "add": {
         const q = state?.marathon_queue || [];
-        if (q.find((x) => x.id === payload?.id))
+        if (q.find((x) => x.id === payload?.id)) {
           return res.json({ ok: true, msg: "exists" });
+        }
         q.push(payload);
         await db.upsertState(req.user.id, { marathon_queue: q });
         await db.addCommand(req.user.id, "marathon_sync", { queue: q });
@@ -258,7 +296,7 @@ router.post("/webapp/marathon", auth.miniAuth, async (req, res) => {
   }
 });
 
-// Настройки уведомлений
+// Notification settings — get
 router.get("/webapp/settings", auth.miniAuth, async (req, res) => {
   try {
     const u = req.user;
@@ -277,6 +315,7 @@ router.get("/webapp/settings", auth.miniAuth, async (req, res) => {
   }
 });
 
+// Notification settings — save
 router.post("/webapp/settings", auth.miniAuth, async (req, res) => {
   try {
     const allow = [
@@ -286,16 +325,58 @@ router.post("/webapp/settings", auth.miniAuth, async (req, res) => {
       "notify_digest",
     ];
     const upd = {};
-    for (const k of allow)
+    for (const k of allow) {
       if (req.body[k] !== undefined) upd[k] = !!req.body[k];
-    if (Object.keys(upd).length) await db.updateSettings(req.user.id, upd);
+    }
+    if (Object.keys(upd).length) {
+      await db.updateSettings(req.user.id, upd);
+    }
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// Рандомное аниме
+// Recommendations (Mini App)
+router.post("/webapp/recommend", auth.miniAuth, async (req, res) => {
+  try {
+    let hist = req.body.history;
+
+    if (!hist || hist.length < 2) {
+      // Fallback: get from saved state
+      const state = await db.getState(req.user.id);
+      const h = state?.history || [];
+      if (h.length < 2) {
+        return res
+          .status(400)
+          .json({ error: "Need watch history (min 2 anime)" });
+      }
+      hist = h
+        .slice(0, 10)
+        .map((x) => ({ title: x.title, genres: x.genres || "" }));
+    }
+
+    const recs = await ai.recommend(hist.slice(0, 10));
+    const results = [];
+
+    for (const rec of recs) {
+      const queries = [rec.query, rec.title_ru, rec.title_en].filter(Boolean);
+      if (!queries.length) continue;
+      try {
+        const found = await search.search(queries);
+        if (found.length) {
+          results.push({ ...found[0], reason: rec.reason });
+        }
+      } catch {}
+    }
+
+    res.json({ ok: true, results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Random anime
 router.get("/webapp/random", auth.miniAuth, async (req, res) => {
   try {
     res.json({ ok: true, result: await search.random() });

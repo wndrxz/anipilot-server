@@ -52,7 +52,6 @@
         font-family: var(--f);
       }
 
-      /* ─── Loading ─── */
       #loading {
         position: fixed;
         inset: 0;
@@ -87,6 +86,9 @@
       .ld-hint {
         font-size: 12px;
         color: var(--text2);
+        text-align: center;
+        max-width: 280px;
+        line-height: 1.5;
       }
       @keyframes spin {
         to {
@@ -104,14 +106,57 @@
         }
       }
 
-      /* ─── App Layout ─── */
+      /* Not in Telegram */
+      #not-tg {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: var(--bg);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 30px;
+        text-align: center;
+      }
+      #not-tg.on {
+        display: flex;
+      }
+      .ntg-icon {
+        font-size: 48px;
+      }
+      .ntg-title {
+        font-size: 22px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .ntg-text {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.6;
+        max-width: 300px;
+      }
+      .ntg-link {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: var(--rs);
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: none;
+        margin-top: 8px;
+      }
+
       #app {
         display: none;
         flex-direction: column;
         height: 100%;
       }
 
-      /* ─── Header ─── */
       .hdr {
         display: flex;
         align-items: center;
@@ -170,7 +215,6 @@
         color: var(--text2);
       }
 
-      /* ─── Offline Banner ─── */
       .offline-banner {
         display: none;
         padding: 8px 16px;
@@ -185,7 +229,6 @@
         display: block;
       }
 
-      /* ─── Main content ─── */
       .main {
         flex: 1;
         overflow-y: auto;
@@ -201,7 +244,6 @@
         border-radius: 9px;
       }
 
-      /* ─── Tab content ─── */
       .tab {
         display: none;
         animation: fadeUp 0.25s ease;
@@ -210,7 +252,6 @@
         display: block;
       }
 
-      /* ─── Bottom Nav ─── */
       .nav {
         position: fixed;
         bottom: 0;
@@ -235,6 +276,7 @@
         font-size: 9px;
         cursor: pointer;
         transition: color 0.2s;
+        position: relative;
       }
       .nav-btn .ico {
         font-size: 18px;
@@ -262,7 +304,6 @@
         padding: 0 3px;
       }
 
-      /* ─── Search ─── */
       .search-wrap {
         position: relative;
         margin-bottom: 10px;
@@ -336,24 +377,7 @@
       .btn-go:disabled {
         opacity: 0.4;
       }
-      .btn-go::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.1),
-          transparent
-        );
-        transform: translateX(-100%);
-        transition: 0.5s;
-      }
-      .btn-go:not(:disabled):active::after {
-        transform: translateX(100%);
-      }
 
-      /* ─── Steps ─── */
       .steps {
         display: flex;
         flex-direction: column;
@@ -370,7 +394,6 @@
         border-radius: 7px;
         background: var(--card);
         border: 1px solid var(--border);
-        transition: 0.2s;
       }
       .step.done {
         color: var(--green);
@@ -393,7 +416,6 @@
         animation: spin 0.6s linear infinite;
       }
 
-      /* ─── Result Cards ─── */
       .results {
         display: flex;
         flex-direction: column;
@@ -480,7 +502,6 @@
         color: var(--accent);
       }
 
-      /* ─── Confirm ─── */
       .confirm {
         display: none;
         text-align: center;
@@ -546,7 +567,6 @@
         color: #fca5a5;
       }
 
-      /* ─── Marathon ─── */
       .mr-empty {
         text-align: center;
         padding: 40px 0;
@@ -632,7 +652,6 @@
         text-align: center;
       }
 
-      /* ─── History ─── */
       .hist-item {
         display: flex;
         align-items: center;
@@ -685,7 +704,6 @@
         font-size: 12px;
       }
 
-      /* ─── Stats ─── */
       .stats-big {
         text-align: center;
         padding: 10px 0;
@@ -726,7 +744,6 @@
         margin: 12px 0;
       }
 
-      /* ─── Now Playing ─── */
       .now-playing {
         display: none;
         padding: 10px;
@@ -762,7 +779,6 @@
         transition: width 0.5s;
       }
 
-      /* ─── Settings ─── */
       .set-row {
         display: flex;
         align-items: center;
@@ -836,7 +852,6 @@
         color: var(--red);
       }
 
-      /* ─── Toast ─── */
       .toast {
         position: fixed;
         top: 12px;
@@ -872,16 +887,28 @@
     </style>
   </head>
   <body>
-    <!-- ═══ Loading ═══ -->
+    <!-- Not in Telegram -->
+    <div id="not-tg">
+      <div class="ntg-icon">🎬</div>
+      <div class="ntg-title">AniPilot</div>
+      <div class="ntg-text">
+        Это приложение работает только<br />внутри Telegram.<br /><br />
+        Откройте бота и нажмите кнопку<br />«🎬 AniPilot» в меню.
+      </div>
+      <a class="ntg-link" href="https://t.me/" target="_blank"
+        >Открыть Telegram</a
+      >
+    </div>
+
+    <!-- Loading -->
     <div id="loading">
       <div class="ld-logo">🎬 AniPilot</div>
       <div class="ld-spin"></div>
       <div class="ld-hint" id="ld-hint">Подключение...</div>
     </div>
 
-    <!-- ═══ App ═══ -->
+    <!-- App -->
     <div id="app">
-      <!-- Header -->
       <div class="hdr">
         <div class="hdr-left">
           <span class="hdr-logo">AniPilot</span>
@@ -892,15 +919,10 @@
           <span class="status-txt" id="h-status">—</span>
         </div>
       </div>
-
-      <!-- Offline banner -->
       <div class="offline-banner" id="offline-banner">
         ⚠️ Скрипт офлайн — команды в очереди. Откройте animix.lol
       </div>
-
-      <!-- Content -->
       <div class="main" id="main-scroll">
-        <!-- Now Playing -->
         <div class="now-playing" id="np">
           <div class="np-title" id="np-title"></div>
           <div class="np-info" id="np-info"></div>
@@ -908,12 +930,10 @@
             <div class="np-fill" id="np-fill" style="width: 0%"></div>
           </div>
         </div>
-
-        <!-- TAB: Search -->
         <div class="tab on" id="t-search">
           <div class="search-wrap">
-            <span class="search-icon">🔍</span>
-            <input
+            <span class="search-icon">🔍</span
+            ><input
               class="search-input"
               id="q"
               type="text"
@@ -929,8 +949,7 @@
               min="1"
               value="1"
               placeholder="Сезон"
-            />
-            <input
+            /><input
               class="ep-input"
               id="e-inp"
               type="number"
@@ -944,18 +963,8 @@
           <div id="results" class="results"></div>
           <div id="confirm" class="confirm"></div>
         </div>
-
-        <!-- TAB: Marathon -->
-        <div class="tab" id="t-marathon">
-          <div id="mr-list"></div>
-        </div>
-
-        <!-- TAB: History -->
-        <div class="tab" id="t-history">
-          <div id="hist"></div>
-        </div>
-
-        <!-- TAB: Stats -->
+        <div class="tab" id="t-marathon"><div id="mr-list"></div></div>
+        <div class="tab" id="t-history"><div id="hist"></div></div>
         <div class="tab" id="t-stats">
           <div class="stats-big">
             <div class="stats-val" id="st-time">0м</div>
@@ -989,8 +998,6 @@
             style="text-align: center; font-size: 12px; color: var(--text2)"
           ></div>
         </div>
-
-        <!-- TAB: Settings -->
         <div class="tab" id="t-settings">
           <div class="set-conn" id="set-conn"></div>
           <div class="set-row">
@@ -1058,8 +1065,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Bottom Nav -->
       <nav class="nav">
         <button class="nav-btn on" data-t="search">
           <span class="ico">🔍</span>Поиск
@@ -1083,29 +1088,33 @@
         </button>
       </nav>
     </div>
-
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
-      /* ═══════════════════════════════════════
-   AniPilot Mini App
-   ═══════════════════════════════════════ */
       (function () {
         "use strict";
 
+        /* ── Telegram check ── */
         const tg = window.Telegram?.WebApp;
-        if (tg) {
-          tg.ready();
-          tg.expand();
-          tg.enableClosingConfirmation?.();
+        const initData = tg?.initData || "";
+
+        if (!initData) {
+          document.getElementById("not-tg").classList.add("on");
+          document.getElementById("loading").style.display = "none";
+          return;
         }
+
+        tg.ready();
+        tg.expand();
+        try {
+          tg.enableClosingConfirmation();
+        } catch {}
 
         /* ── Theme ── */
         function applyTgTheme() {
           if (!tg?.themeParams) return;
-          const p = tg.themeParams;
-          const r = document.documentElement.style;
+          const p = tg.themeParams,
+            r = document.documentElement.style;
           if (p.bg_color) r.setProperty("--bg", p.bg_color);
           if (p.secondary_bg_color) {
             r.setProperty("--bg2", p.secondary_bg_color);
@@ -1113,35 +1122,32 @@
           }
           if (p.text_color) r.setProperty("--text", p.text_color);
           if (p.hint_color) r.setProperty("--text2", p.hint_color);
-          if (p.link_color) r.setProperty("--accent", p.link_color);
           if (p.button_color) r.setProperty("--accent", p.button_color);
         }
         applyTgTheme();
-        if (tg) tg.onEvent("themeChanged", applyTgTheme);
+        tg.onEvent("themeChanged", applyTgTheme);
 
         /* ── API ── */
         const BASE = location.origin;
-        const initData = tg?.initData || "";
-
         async function api(path, opts = {}) {
-          const url = BASE + "/api" + path;
-          const headers = { "Content-Type": "application/json" };
-          if (initData) headers["X-Telegram-Init-Data"] = initData;
-
-          for (let attempt = 0; attempt < 3; attempt++) {
+          const headers = {
+            "Content-Type": "application/json",
+            "X-Telegram-Init-Data": initData,
+          };
+          for (let i = 0; i < 3; i++) {
             try {
-              const r = await fetch(url, {
-                method: opts.method || (opts.body ? "POST" : "GET"),
+              const r = await fetch(BASE + "/api" + path, {
+                method: opts.body ? "POST" : "GET",
                 headers,
                 body: opts.body ? JSON.stringify(opts.body) : undefined,
-                signal: AbortSignal.timeout(20000 + attempt * 10000),
+                signal: AbortSignal.timeout(20000 + i * 10000),
               });
               const d = await r.json();
-              if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+              if (!r.ok) throw new Error(d.error || "HTTP " + r.status);
               return d;
             } catch (e) {
-              if (attempt === 2) throw e;
-              await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+              if (i === 2) throw e;
+              await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
             }
           }
         }
@@ -1161,7 +1167,6 @@
           videoDuration: 0,
           connected: false,
         };
-
         let settings = {
           notify_crash: true,
           notify_marathon: true,
@@ -1169,7 +1174,6 @@
           notify_digest: true,
         };
 
-        /* ── DOM ── */
         const $ = (s) => document.querySelector(s);
         const $$ = (s) => [...document.querySelectorAll(s)];
         const esc = (s) => {
@@ -1178,103 +1182,83 @@
           return d.innerHTML;
         };
 
-        /* ── Toast ── */
         let toastTimer = null;
-        function toast(msg, type = "info") {
+        function toast(msg, type) {
           const el = $("#toast");
-          el.className = `toast ${type}`;
+          el.className = "toast " + (type || "info");
           el.innerHTML = msg;
           clearTimeout(toastTimer);
           requestAnimationFrame(() => el.classList.add("on"));
           toastTimer = setTimeout(() => el.classList.remove("on"), 3500);
         }
 
-        /* ── Init ── */
         async function init() {
           const hint = $("#ld-hint");
-
           try {
-            hint.textContent = "Загрузка данных...";
-            const [stateRes, settRes] = await Promise.all([
+            hint.textContent = "Загрузка...";
+            const [sr, se] = await Promise.all([
               api("/webapp/state"),
               api("/webapp/settings"),
             ]);
-
-            if (stateRes.ok && stateRes.state) {
-              const st = stateRes.state;
-              S.scriptOnline = st.scriptOnline || false;
-              S.currentAnime = st.current_anime || null;
-              S.marathonQueue = st.marathon_queue || [];
-              S.marathonOn = st.marathon_on || false;
-              S.marathonIdx = st.marathon_idx || 0;
-              S.history = st.history || [];
-              S.bingeToday = st.binge_today || 0;
-              S.watchMinutes = st.watch_minutes || 0;
-              S.isPlaying = st.is_playing || false;
-              S.videoTime = st.video_time || 0;
-              S.videoDuration = st.video_duration || 0;
+            if (sr.ok && sr.state) {
+              const t = sr.state;
+              S.scriptOnline = t.scriptOnline || false;
+              S.currentAnime = t.current_anime || null;
+              S.marathonQueue = t.marathon_queue || [];
+              S.marathonOn = t.marathon_on || false;
+              S.marathonIdx = t.marathon_idx || 0;
+              S.history = t.history || [];
+              S.bingeToday = t.binge_today || 0;
+              S.watchMinutes = t.watch_minutes || 0;
+              S.isPlaying = t.is_playing || false;
+              S.videoTime = t.video_time || 0;
+              S.videoDuration = t.video_duration || 0;
               S.connected = true;
             }
-
-            if (settRes.ok) {
-              S.connected = settRes.connected;
-              Object.assign(settings, settRes.settings || {});
+            if (se.ok) {
+              S.connected = se.connected;
+              Object.assign(settings, se.settings || {});
             }
-
-            // Show app
             $("#loading").classList.add("hide");
             setTimeout(() => ($("#loading").style.display = "none"), 500);
             $("#app").style.display = "flex";
-
             updateUI();
             startPolling();
           } catch (e) {
-            hint.textContent = "Ошибка: " + e.message;
+            hint.textContent = "Сервер просыпается...\nПодождите 30 сек";
             hint.style.color = "#fca5a5";
-            // Retry
             setTimeout(init, 5000);
           }
         }
 
-        /* ── UI Update ── */
         function updateUI() {
-          // Status
-          const dot = $("#h-dot");
-          const stxt = $("#h-status");
-          dot.className = "status-dot " + (S.scriptOnline ? "on" : "off");
-          stxt.textContent = S.scriptOnline ? "Онлайн" : "Офлайн";
+          $("#h-dot").className =
+            "status-dot " + (S.scriptOnline ? "on" : "off");
+          $("#h-status").textContent = S.scriptOnline ? "Онлайн" : "Офлайн";
           $("#offline-banner").classList.toggle(
             "on",
             !S.scriptOnline && S.connected,
           );
-
-          // Now Playing
           const np = $("#np");
           if (S.currentAnime?.title && S.scriptOnline) {
             np.classList.add("on");
             $("#np-title").textContent =
               (S.isPlaying ? "▶ " : "⏸ ") + S.currentAnime.title;
             $("#np-info").textContent =
-              `С${S.currentAnime.season || "?"}Е${S.currentAnime.episode || "?"}`;
-            const pct =
-              S.videoDuration > 0
+              "С" +
+              (S.currentAnime.season || "?") +
+              "Е" +
+              (S.currentAnime.episode || "?");
+            $("#np-fill").style.width =
+              (S.videoDuration > 0
                 ? Math.min(100, (S.videoTime / S.videoDuration) * 100)
-                : 0;
-            $("#np-fill").style.width = pct + "%";
-          } else {
-            np.classList.remove("on");
-          }
-
-          // Marathon badge
+                : 0) + "%";
+          } else np.classList.remove("on");
           const badge = $("#mr-badge");
-          if (S.marathonQueue.length > 0) {
+          if (S.marathonQueue.length) {
             badge.style.display = "flex";
             badge.textContent = S.marathonQueue.length;
-          } else {
-            badge.style.display = "none";
-          }
-
-          // Stats
+          } else badge.style.display = "none";
           const min = S.watchMinutes || 0;
           $("#st-time").textContent =
             min < 60
@@ -1284,15 +1268,12 @@
                 (min % 60 ? " " + (min % 60) + "м" : "");
           $("#st-binge").textContent = S.bingeToday || 0;
           $("#st-total").textContent = Math.round(min / 60) || 0;
-
-          const stNow = $("#st-now");
-          if (S.currentAnime?.title) {
-            stNow.innerHTML = `Сейчас: <b>${esc(S.currentAnime.title)}</b><br>${S.isPlaying ? "▶" : "⏸"}`;
-          } else {
-            stNow.textContent = "Ничего не воспроизводится";
-          }
-
-          // Settings
+          $("#st-now").innerHTML = S.currentAnime?.title
+            ? "Сейчас: <b>" +
+              esc(S.currentAnime.title) +
+              "</b><br>" +
+              (S.isPlaying ? "▶" : "⏸")
+            : "Ничего не воспроизводится";
           $("#set-crash").checked = settings.notify_crash;
           $("#set-marathon").checked = settings.notify_marathon;
           $("#set-offline").checked = settings.notify_offline;
@@ -1300,12 +1281,10 @@
           $("#set-conn").innerHTML = S.connected
             ? '<span class="ok">✅ Скрипт привязан</span>'
             : '<span class="no">❌ Не привязан — /connect в боте</span>';
-
           renderHistory();
           renderMarathon();
         }
 
-        /* ── Polling ── */
         let pollTimer = null;
         function startPolling() {
           clearInterval(pollTimer);
@@ -1313,44 +1292,37 @@
             try {
               const r = await api("/webapp/state");
               if (!r.ok) return;
-              const st = r.state || {};
-              S.scriptOnline = st.scriptOnline || false;
-              S.currentAnime = st.current_anime || null;
-              S.marathonQueue = st.marathon_queue || [];
-              S.marathonOn = st.marathon_on || false;
-              S.marathonIdx = st.marathon_idx || 0;
-              S.history = st.history || [];
-              S.bingeToday = st.binge_today || 0;
-              S.watchMinutes = st.watch_minutes || 0;
-              S.isPlaying = st.is_playing || false;
-              S.videoTime = st.video_time || 0;
-              S.videoDuration = st.video_duration || 0;
+              const t = r.state || {};
+              S.scriptOnline = t.scriptOnline || false;
+              S.currentAnime = t.current_anime || null;
+              S.marathonQueue = t.marathon_queue || [];
+              S.marathonOn = t.marathon_on || false;
+              S.marathonIdx = t.marathon_idx || 0;
+              S.history = t.history || [];
+              S.bingeToday = t.binge_today || 0;
+              S.watchMinutes = t.watch_minutes || 0;
+              S.isPlaying = t.is_playing || false;
+              S.videoTime = t.video_time || 0;
+              S.videoDuration = t.video_duration || 0;
               updateUI();
             } catch {}
           }, 10000);
         }
 
-        /* ── Tabs ── */
-        $$(".nav-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const t = btn.dataset.t;
-            $$(".nav-btn").forEach((b) => b.classList.toggle("on", b === btn));
+        $$(".nav-btn").forEach((b) =>
+          b.addEventListener("click", () => {
+            $$(".nav-btn").forEach((x) => x.classList.toggle("on", x === b));
             $$(".tab").forEach((p) =>
-              p.classList.toggle("on", p.id === "t-" + t),
+              p.classList.toggle("on", p.id === "t-" + b.dataset.t),
             );
             $("#main-scroll").scrollTop = 0;
-          });
-        });
+          }),
+        );
 
-        /* ══════════════════════════════════════
-   SEARCH
-   ══════════════════════════════════════ */
-
-        const qInput = $("#q");
-        const sInput = $("#s-inp");
-        const eInput = $("#e-inp");
-        const goBtn = $("#btn-go");
-
+        const qInput = $("#q"),
+          sInput = $("#s-inp"),
+          eInput = $("#e-inp"),
+          goBtn = $("#btn-go");
         goBtn.addEventListener("click", doSearch);
         qInput.addEventListener("keydown", (e) => {
           if (e.key === "Enter") doSearch();
@@ -1362,7 +1334,12 @@
           list.forEach((s) => {
             const d = document.createElement("div");
             d.className = "step " + (s.state || "");
-            d.innerHTML = `<span style="width:18px;text-align:center;flex-shrink:0">${s.state === "act" ? '<span class="step-spin"></span>' : s.icon}</span><span>${esc(s.text)}</span>`;
+            d.innerHTML =
+              '<span style="width:18px;text-align:center;flex-shrink:0">' +
+              (s.state === "act" ? '<span class="step-spin"></span>' : s.icon) +
+              "</span><span>" +
+              esc(s.text) +
+              "</span>";
             el.append(d);
           });
         }
@@ -1373,7 +1350,6 @@
             toast("Введите запрос", "err");
             return;
           }
-
           goBtn.disabled = true;
           $("#results").innerHTML = "";
           $("#confirm").classList.remove("on");
@@ -1381,10 +1357,8 @@
             { icon: "🤖", text: "ИИ анализирует...", state: "act" },
             { icon: "🔍", text: "Поиск", state: "" },
           ]);
-
           try {
             const r = await api("/webapp/search", { body: { query: q } });
-
             if (!r.found) {
               setSteps([{ icon: "❌", text: "Не найдено", state: "err" }]);
               if (r.suggestions?.length)
@@ -1392,26 +1366,22 @@
               goBtn.disabled = false;
               return;
             }
-
             const ai = r.ai || {};
             setSteps([
               {
                 icon: "✅",
-                text: `${ai.title} (${ai.confidence || "?"}%)`,
+                text: ai.title + " (" + (ai.confidence || "?") + "%)",
                 state: "done",
               },
               {
                 icon: "✅",
-                text: `${r.results.length} результатов`,
+                text: r.results.length + " результатов",
                 state: "done",
               },
             ]);
-
-            if (r.results.length === 1 && ai.confidence >= 90) {
+            if (r.results.length === 1 && ai.confidence >= 90)
               showConfirm(r.results[0], ai);
-            } else {
-              showResults(r.results, ai);
-            }
+            else showResults(r.results, ai);
           } catch (e) {
             setSteps([{ icon: "❌", text: e.message, state: "err" }]);
             toast(e.message, "err");
@@ -1422,30 +1392,28 @@
         function showResults(results, ai) {
           const el = $("#results");
           el.innerHTML = "";
-          const season = parseInt(sInput.value) || 1;
-          const episode = parseInt(eInput.value) || 1;
-
           results.forEach((r) => {
             const card = document.createElement("div");
             card.className = "rcard";
-
             let badges = "";
             if (r.rating)
-              badges += `<span class="badge badge-r">★${r.rating}</span> `;
+              badges += '<span class="badge badge-r">★' + r.rating + "</span> ";
             if (r.aiCf)
-              badges += `<span class="badge badge-ai">${r.aiCf}%</span>`;
-
-            card.innerHTML = `
-            <img class="rcard-img" src="${esc(r.image)}" loading="lazy" onerror="this.style.background='var(--border)'">
-            <div class="rcard-info">
-                <div class="rcard-title">${esc(r.title)}</div>
-                <div class="rcard-meta">${esc([r.studio, (r.genres || []).slice(0, 3).join(", ")].filter(Boolean).join(" · "))} ${badges}</div>
-            </div>
-            <div class="rcard-acts">
-                <button class="rcard-btn play" data-act="play">▶</button>
-                <button class="rcard-btn mara" data-act="mara">➕</button>
-            </div>`;
-
+              badges += '<span class="badge badge-ai">' + r.aiCf + "%</span>";
+            card.innerHTML =
+              '<img class="rcard-img" src="' +
+              esc(r.image) +
+              '" loading="lazy" onerror="this.style.background=\'var(--border)\'"><div class="rcard-info"><div class="rcard-title">' +
+              esc(r.title) +
+              '</div><div class="rcard-meta">' +
+              esc(
+                [r.studio, (r.genres || []).slice(0, 3).join(", ")]
+                  .filter(Boolean)
+                  .join(" · "),
+              ) +
+              " " +
+              badges +
+              '</div></div><div class="rcard-acts"><button class="rcard-btn play" data-act="play">▶</button><button class="rcard-btn mara" data-act="mara">➕</button></div>';
             card
               .querySelector('[data-act="play"]')
               .addEventListener("click", (e) => {
@@ -1456,7 +1424,11 @@
               .querySelector('[data-act="mara"]')
               .addEventListener("click", (e) => {
                 e.stopPropagation();
-                addToMarathon(r, season, episode);
+                addToMarathon(
+                  r,
+                  parseInt(sInput.value) || 1,
+                  parseInt(eInput.value) || 1,
+                );
               });
             card.addEventListener("click", () => showConfirm(r, ai));
             el.append(card);
@@ -1464,29 +1436,36 @@
         }
 
         function showConfirm(anime, ai) {
-          const el = $("#confirm");
-          const season = parseInt(sInput.value) || 1;
-          const episode = parseInt(eInput.value) || 1;
+          const el = $("#confirm"),
+            s = parseInt(sInput.value) || 1,
+            e = parseInt(eInput.value) || 1;
           $("#results").innerHTML = "";
           $("#steps").innerHTML = "";
-
-          el.innerHTML = `
-        ${anime.image ? `<img class="cfm-img" src="${esc(anime.image)}" onerror="this.style.display='none'">` : ""}
-        <div class="cfm-title">${esc(anime.title)}</div>
-        <div class="cfm-sub">С${season} · Е${episode}${ai?.desc ? '<br><span style="font-size:10px;opacity:.6">' + esc(ai.desc) + "</span>" : ""}</div>
-        <div class="cfm-btns">
-            <button class="btn" id="cfm-back">←</button>
-            <button class="btn btn-m" id="cfm-mara">➕</button>
-            <button class="btn btn-y" id="cfm-go">▶ Смотреть</button>
-        </div>
-        ${!S.scriptOnline ? '<div style="margin-top:10px;font-size:10px;color:#fca5a5">⚠️ Скрипт офлайн — команда в очереди</div>' : ""}`;
+          el.innerHTML =
+            (anime.image
+              ? '<img class="cfm-img" src="' +
+                esc(anime.image) +
+                '" onerror="this.style.display=\'none\'">'
+              : "") +
+            '<div class="cfm-title">' +
+            esc(anime.title) +
+            '</div><div class="cfm-sub">С' +
+            s +
+            " · Е" +
+            e +
+            (ai?.desc
+              ? '<br><span style="font-size:10px;opacity:.6">' +
+                esc(ai.desc) +
+                "</span>"
+              : "") +
+            '</div><div class="cfm-btns"><button class="btn" id="cfm-back">←</button><button class="btn btn-m" id="cfm-mara">➕</button><button class="btn btn-y" id="cfm-go">▶ Смотреть</button></div>' +
+            (!S.scriptOnline
+              ? '<div style="margin-top:10px;font-size:10px;color:#fca5a5">⚠️ Скрипт офлайн — команда в очереди</div>'
+              : "");
           el.classList.add("on");
-
-          $("#cfm-go").addEventListener("click", () =>
-            goWatch(anime, season, episode),
-          );
+          $("#cfm-go").addEventListener("click", () => goWatch(anime, s, e));
           $("#cfm-mara").addEventListener("click", () => {
-            addToMarathon(anime, season, episode);
+            addToMarathon(anime, s, e);
             el.classList.remove("on");
           });
           $("#cfm-back").addEventListener("click", () => {
@@ -1495,7 +1474,7 @@
           });
         }
 
-        async function goWatch(anime, season, episode) {
+        async function goWatch(anime, s, e) {
           try {
             await api("/webapp/command", {
               body: {
@@ -1505,32 +1484,22 @@
                   url: anime.url,
                   title: anime.title,
                   image: anime.image,
-                  season,
-                  episode,
+                  season: s,
+                  episode: e,
                 },
               },
             });
             toast(
               S.scriptOnline
-                ? `▶ ${anime.title} С${season}Е${episode}`
+                ? "▶ " + anime.title + " С" + s + "Е" + e
                 : "📋 В очереди — откройте animix.lol",
               S.scriptOnline ? "ok" : "info",
             );
-            if (tg)
-              tg.showAlert(
-                S.scriptOnline
-                  ? `Открываю ${anime.title}`
-                  : "Команда в очереди. Откройте animix.lol",
-              );
             $("#confirm").classList.remove("on");
           } catch (e) {
             toast("Ошибка: " + e.message, "err");
           }
         }
-
-        /* ══════════════════════════════════════
-   MARATHON
-   ══════════════════════════════════════ */
 
         async function addToMarathon(anime, season, episode) {
           try {
@@ -1563,49 +1532,51 @@
         }
 
         function renderMarathon() {
-          const el = $("#mr-list");
-          const q = S.marathonQueue;
-
+          const el = $("#mr-list"),
+            q = S.marathonQueue;
           if (!q.length) {
             el.innerHTML =
               '<div class="mr-empty">🎬 Марафон пуст<br><span style="font-size:10px;opacity:.6">Добавьте через поиск →</span></div>';
             return;
           }
-
-          let html = '<div class="mr-list">';
+          let h = '<div class="mr-list">';
           q.forEach((it, i) => {
             const active = S.marathonOn && i === S.marathonIdx;
-            html += `<div class="mr-item ${active ? "active" : ""}">
-            <img class="mr-img" src="${esc(it.image || "")}" loading="lazy" onerror="this.style.display='none'">
-            <div class="mr-info">
-                <div class="mr-name">${i + 1}. ${esc(it.title)}</div>
-                <div class="mr-ep">С${it.season || 1}Е${it.ep || 1}${active ? " ▶" : ""}</div>
-            </div>
-            <div class="mr-acts">
-                <button class="mr-btn" onclick="mrAction('up','${it.id}')">↑</button>
-                <button class="mr-btn" onclick="mrAction('down','${it.id}')">↓</button>
-                <button class="mr-btn del" onclick="mrAction('rm','${it.id}')">✕</button>
-            </div>
-        </div>`;
+            h +=
+              '<div class="mr-item ' +
+              (active ? "active" : "") +
+              '"><img class="mr-img" src="' +
+              esc(it.image || "") +
+              '" loading="lazy" onerror="this.style.display=\'none\'"><div class="mr-info"><div class="mr-name">' +
+              (i + 1) +
+              ". " +
+              esc(it.title) +
+              '</div><div class="mr-ep">С' +
+              (it.season || 1) +
+              "Е" +
+              (it.ep || 1) +
+              (active ? " ▶" : "") +
+              '</div></div><div class="mr-acts"><button class="mr-btn" onclick="mrAction(\'up\',\'' +
+              it.id +
+              "')\">↑</button><button class=\"mr-btn\" onclick=\"mrAction('down','" +
+              it.id +
+              "')\">↓</button><button class=\"mr-btn del\" onclick=\"mrAction('rm','" +
+              it.id +
+              "')\">✕</button></div></div>";
           });
-          html += "</div>";
-
-          html += '<div class="mr-controls">';
-          if (S.marathonOn) {
-            html += `<button class="btn btn-d" onclick="mrCmd('stop')">⏹ Стоп</button>`;
-            html += `<button class="btn btn-y" onclick="mrCmd('next')">⏭ Следующий</button>`;
-          } else {
-            html += `<button class="btn btn-y" onclick="mrCmd('start')">▶ Старт</button>`;
-            html += `<button class="btn btn-d" onclick="mrCmd('clear')">🗑 Очистить</button>`;
-          }
-          html += "</div>";
-
-          el.innerHTML = html;
+          h += '</div><div class="mr-controls">';
+          if (S.marathonOn)
+            h +=
+              '<button class="btn btn-d" onclick="mrCmd(\'stop\')">⏹ Стоп</button><button class="btn btn-y" onclick="mrCmd(\'next\')">⏭ Следующий</button>';
+          else
+            h +=
+              '<button class="btn btn-y" onclick="mrCmd(\'start\')">▶ Старт</button><button class="btn btn-d" onclick="mrCmd(\'clear\')">🗑 Очистить</button>';
+          h += "</div>";
+          el.innerHTML = h;
         }
 
         window.mrAction = async function (action, id) {
           const q = [...S.marathonQueue];
-
           if (action === "rm") {
             S.marathonQueue = q.filter((x) => x.id !== id);
             try {
@@ -1642,7 +1613,6 @@
               });
             } catch {}
           }
-
           updateUI();
         };
 
@@ -1658,17 +1628,14 @@
               S.marathonQueue = [];
               S.marathonOn = false;
             }
-            if (action === "next") {
-              S.marathonIdx++;
-            }
-            const hint = !S.scriptOnline ? " (откройте animix.lol)" : "";
+            if (action === "next") S.marathonIdx++;
             toast(
               {
                 start: "▶ Марафон!",
                 stop: "⏹ Стоп",
                 next: "⏭ Следующий",
                 clear: "🗑 Очищено",
-              }[action] + hint,
+              }[action] + (!S.scriptOnline ? " (откройте animix.lol)" : ""),
               "ok",
             );
             updateUI();
@@ -1677,44 +1644,39 @@
           }
         };
 
-        /* ══════════════════════════════════════
-   HISTORY
-   ══════════════════════════════════════ */
-
         function renderHistory() {
-          const el = $("#hist");
-          const h = S.history || [];
-
+          const el = $("#hist"),
+            h = S.history || [];
           if (!h.length) {
             el.innerHTML = '<div class="empty">📭 История пуста</div>';
             return;
           }
-
           el.innerHTML = "";
           h.forEach((it) => {
             const d = document.createElement("div");
             d.className = "hist-item";
-            d.innerHTML = `
-            <img class="hist-img" src="${esc(it.image || "")}" loading="lazy" onerror="this.style.display='none'">
-            <div class="hist-info">
-                <div class="hist-name">${esc(it.title || "")}</div>
-                <div class="hist-meta">${esc(it.genres || "")}</div>
-            </div>
-            <div class="hist-ep">С${it.season || 1}Е${it.episode || 1}</div>`;
+            d.innerHTML =
+              '<img class="hist-img" src="' +
+              esc(it.image || "") +
+              '" loading="lazy" onerror="this.style.display=\'none\'"><div class="hist-info"><div class="hist-name">' +
+              esc(it.title || "") +
+              '</div><div class="hist-meta">' +
+              esc(it.genres || "") +
+              '</div></div><div class="hist-ep">С' +
+              (it.season || 1) +
+              "Е" +
+              (it.episode || 1) +
+              "</div>";
             d.addEventListener("click", () => {
               qInput.value = it.title;
               sInput.value = it.season || 1;
               eInput.value = it.episode || 1;
-              $$(".nav-btn")[0].click(); // go to search tab
+              $$(".nav-btn")[0].click();
               doSearch();
             });
             el.append(d);
           });
         }
-
-        /* ══════════════════════════════════════
-   SETTINGS
-   ══════════════════════════════════════ */
 
         $("#btn-save-set").addEventListener("click", async () => {
           const s = {
@@ -1732,24 +1694,6 @@
           }
         });
 
-        /* ══════════════════════════════════════
-   INIT
-   ══════════════════════════════════════ */
-
-        // HapticFeedback
-        function haptic(type) {
-          try {
-            tg?.HapticFeedback?.impactOccurred?.(type || "light");
-          } catch {}
-        }
-
-        // Wrap nav clicks with haptic
-        $$(".nav-btn").forEach((b) =>
-          b.addEventListener("click", () => haptic("light")),
-        );
-        goBtn.addEventListener("click", () => haptic("medium"));
-
-        // Start
         init();
       })();
     </script>
