@@ -1,1 +1,1757 @@
-<h1>Coming soon</h1>
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>AniPilot</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      :root {
+        --bg: #1a1a2e;
+        --bg2: #16213e;
+        --card: #1e2746;
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #e2e8f0;
+        --text2: #94a3b8;
+        --accent: #8b5cf6;
+        --accent2: #ec4899;
+        --green: #22c55e;
+        --red: #ef4444;
+        --yellow: #facc15;
+        --r: 14px;
+        --rs: 10px;
+        --f: -apple-system, "Segoe UI", system-ui, Roboto, sans-serif;
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        font-family: var(--f);
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+      button {
+        font-family: var(--f);
+      }
+      input,
+      select {
+        font-family: var(--f);
+      }
+
+      /* ─── Loading ─── */
+      #loading {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        transition: opacity 0.4s;
+      }
+      #loading.hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .ld-logo {
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .ld-spin {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      .ld-hint {
+        font-size: 12px;
+        color: var(--text2);
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* ─── App Layout ─── */
+      #app {
+        display: none;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      /* ─── Header ─── */
+      .hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg);
+      }
+      .hdr-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .hdr-logo {
+        font-size: 17px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hdr-ai {
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 8px;
+        font-weight: 700;
+        background: rgba(139, 92, 246, 0.15);
+        color: var(--accent);
+        letter-spacing: 0.5px;
+      }
+      .hdr-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .status-dot.on {
+        background: var(--green);
+      }
+      .status-dot.off {
+        background: var(--red);
+        animation: blink 1.2s infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .status-txt {
+        font-size: 10px;
+        color: var(--text2);
+      }
+
+      /* ─── Offline Banner ─── */
+      .offline-banner {
+        display: none;
+        padding: 8px 16px;
+        font-size: 11px;
+        background: rgba(239, 68, 68, 0.1);
+        color: #fca5a5;
+        text-align: center;
+        border-bottom: 1px solid rgba(239, 68, 68, 0.15);
+        flex-shrink: 0;
+      }
+      .offline-banner.on {
+        display: block;
+      }
+
+      /* ─── Main content ─── */
+      .main {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 14px 16px calc(64px + var(--safe-bottom));
+        -webkit-overflow-scrolling: touch;
+      }
+      .main::-webkit-scrollbar {
+        width: 3px;
+      }
+      .main::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 9px;
+      }
+
+      /* ─── Tab content ─── */
+      .tab {
+        display: none;
+        animation: fadeUp 0.25s ease;
+      }
+      .tab.on {
+        display: block;
+      }
+
+      /* ─── Bottom Nav ─── */
+      .nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        background: var(--bg2);
+        border-top: 1px solid var(--border);
+        padding-bottom: var(--safe-bottom);
+        z-index: 100;
+      }
+      .nav-btn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 8px 0 6px;
+        border: none;
+        background: none;
+        color: var(--text2);
+        font-size: 9px;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .nav-btn .ico {
+        font-size: 18px;
+      }
+      .nav-btn.on {
+        color: var(--accent);
+      }
+      .nav-btn.on .ico {
+        transform: scale(1.1);
+      }
+      .nav-badge {
+        position: absolute;
+        top: 2px;
+        right: calc(50% - 16px);
+        min-width: 14px;
+        height: 14px;
+        border-radius: 7px;
+        background: var(--red);
+        color: #fff;
+        font-size: 8px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 3px;
+      }
+
+      /* ─── Search ─── */
+      .search-wrap {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+        color: var(--text2);
+        pointer-events: none;
+      }
+      .search-input {
+        width: 100%;
+        padding: 12px 14px 12px 38px;
+        border-radius: var(--rs);
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+        transition: 0.25s;
+      }
+      .search-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+      }
+      .search-input::placeholder {
+        color: var(--text2);
+      }
+
+      .ep-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .ep-input {
+        flex: 1;
+        padding: 10px;
+        border-radius: var(--rs);
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 13px;
+        text-align: center;
+        outline: none;
+        transition: 0.25s;
+      }
+      .ep-input:focus {
+        border-color: var(--accent);
+      }
+
+      .btn-go {
+        width: 100%;
+        padding: 13px;
+        border-radius: var(--rs);
+        border: none;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.25s;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-go:active {
+        transform: scale(0.98);
+      }
+      .btn-go:disabled {
+        opacity: 0.4;
+      }
+      .btn-go::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transform: translateX(-100%);
+        transition: 0.5s;
+      }
+      .btn-go:not(:disabled):active::after {
+        transform: translateX(100%);
+      }
+
+      /* ─── Steps ─── */
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 10px;
+      }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11.5px;
+        color: var(--text2);
+        padding: 7px 10px;
+        border-radius: 7px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        transition: 0.2s;
+      }
+      .step.done {
+        color: var(--green);
+        border-color: rgba(34, 197, 94, 0.15);
+      }
+      .step.act {
+        color: var(--accent);
+        border-color: rgba(139, 92, 246, 0.25);
+      }
+      .step.err {
+        color: var(--red);
+        border-color: rgba(239, 68, 68, 0.15);
+      }
+      .step-spin {
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
+
+      /* ─── Result Cards ─── */
+      .results {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .rcard {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: var(--rs);
+        border: 1px solid var(--border);
+        background: var(--card);
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .rcard:active {
+        transform: scale(0.98);
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .rcard-img {
+        width: 44px;
+        height: 62px;
+        border-radius: 7px;
+        object-fit: cover;
+        background: var(--border);
+        flex-shrink: 0;
+      }
+      .rcard-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .rcard-title {
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .rcard-meta {
+        font-size: 10.5px;
+        color: var(--text2);
+        margin-top: 2px;
+      }
+      .rcard-acts {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .rcard-btn {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text2);
+        font-size: 11px;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .rcard-btn:active {
+        transform: scale(0.93);
+      }
+      .rcard-btn.play {
+        background: rgba(139, 92, 246, 0.12);
+        color: var(--accent);
+      }
+      .rcard-btn.mara {
+        background: rgba(236, 72, 153, 0.1);
+        color: var(--accent2);
+      }
+      .badge {
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: 600;
+      }
+      .badge-r {
+        background: rgba(250, 204, 21, 0.1);
+        color: var(--yellow);
+      }
+      .badge-ai {
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--accent);
+      }
+
+      /* ─── Confirm ─── */
+      .confirm {
+        display: none;
+        text-align: center;
+        padding: 10px 0;
+        animation: fadeUp 0.3s;
+      }
+      .confirm.on {
+        display: block;
+      }
+      .cfm-img {
+        width: 110px;
+        height: 156px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin: 0 auto 12px;
+        display: block;
+        border: 2px solid var(--border);
+      }
+      .cfm-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .cfm-sub {
+        font-size: 11.5px;
+        color: var(--text2);
+        margin-bottom: 14px;
+        line-height: 1.5;
+      }
+      .cfm-btns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+      }
+      .btn {
+        padding: 10px 20px;
+        border-radius: var(--rs);
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn:active {
+        transform: scale(0.95);
+      }
+      .btn-y {
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-color: transparent;
+        color: #fff;
+      }
+      .btn-m {
+        background: rgba(236, 72, 153, 0.1);
+        color: var(--accent2);
+      }
+      .btn-d {
+        background: rgba(239, 68, 68, 0.08);
+        color: #fca5a5;
+      }
+
+      /* ─── Marathon ─── */
+      .mr-empty {
+        text-align: center;
+        padding: 40px 0;
+        color: var(--text2);
+        font-size: 12px;
+      }
+      .mr-list {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .mr-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 10px;
+        border-radius: var(--rs);
+        border: 1px solid var(--border);
+        background: var(--card);
+        transition: 0.2s;
+      }
+      .mr-item.active {
+        border-color: var(--accent);
+        background: rgba(139, 92, 246, 0.05);
+      }
+      .mr-img {
+        width: 32px;
+        height: 46px;
+        border-radius: 5px;
+        object-fit: cover;
+        background: var(--border);
+        flex-shrink: 0;
+      }
+      .mr-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .mr-name {
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mr-ep {
+        font-size: 10px;
+        color: var(--text2);
+        margin-top: 1px;
+      }
+      .mr-acts {
+        display: flex;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+      .mr-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        transition: 0.15s;
+      }
+      .mr-btn:active {
+        transform: scale(0.9);
+      }
+      .mr-btn.del:active {
+        background: rgba(239, 68, 68, 0.12);
+        color: var(--red);
+      }
+      .mr-controls {
+        display: flex;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .mr-controls .btn {
+        flex: 1;
+        text-align: center;
+      }
+
+      /* ─── History ─── */
+      .hist-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: var(--rs);
+        border: 1px solid var(--border);
+        background: var(--card);
+        margin-bottom: 5px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .hist-item:active {
+        transform: scale(0.98);
+      }
+      .hist-img {
+        width: 30px;
+        height: 42px;
+        border-radius: 5px;
+        object-fit: cover;
+        background: var(--border);
+        flex-shrink: 0;
+      }
+      .hist-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .hist-name {
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .hist-meta {
+        font-size: 10px;
+        color: var(--text2);
+        margin-top: 1px;
+      }
+      .hist-ep {
+        font-size: 10px;
+        color: #06b6d4;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .empty {
+        text-align: center;
+        padding: 40px 0;
+        color: var(--text2);
+        font-size: 12px;
+      }
+
+      /* ─── Stats ─── */
+      .stats-big {
+        text-align: center;
+        padding: 10px 0;
+      }
+      .stats-val {
+        font-size: 36px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .stats-label {
+        font-size: 11px;
+        color: var(--text2);
+        margin-top: 2px;
+      }
+      .stats-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin: 14px 0;
+      }
+      .stats-cell {
+        text-align: center;
+      }
+      .stats-cell-val {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .stats-cell-lbl {
+        font-size: 9px;
+        color: var(--text2);
+        margin-top: 2px;
+      }
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 12px 0;
+      }
+
+      /* ─── Now Playing ─── */
+      .now-playing {
+        display: none;
+        padding: 10px;
+        border-radius: var(--rs);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        background: rgba(139, 92, 246, 0.05);
+        margin-bottom: 12px;
+        animation: fadeUp 0.3s;
+      }
+      .now-playing.on {
+        display: block;
+      }
+      .np-title {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 3px;
+      }
+      .np-info {
+        font-size: 10.5px;
+        color: var(--text2);
+      }
+      .np-bar {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--border);
+        margin-top: 6px;
+        overflow: hidden;
+      }
+      .np-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        transition: width 0.5s;
+      }
+
+      /* ─── Settings ─── */
+      .set-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .set-row:last-child {
+        border-bottom: none;
+      }
+      .set-lbl {
+        font-size: 12.5px;
+        font-weight: 500;
+      }
+      .set-desc {
+        font-size: 10px;
+        color: var(--text2);
+        margin-top: 2px;
+      }
+      .toggle {
+        position: relative;
+        width: 42px;
+        height: 22px;
+        flex-shrink: 0;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+      }
+      .toggle-slider {
+        position: absolute;
+        inset: 0;
+        border-radius: 11px;
+        background: var(--border);
+        cursor: pointer;
+        transition: 0.25s;
+      }
+      .toggle-slider::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--text2);
+        transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .toggle input:checked + .toggle-slider {
+        background: var(--accent);
+      }
+      .toggle input:checked + .toggle-slider::after {
+        transform: translateX(20px);
+        background: #fff;
+      }
+      .set-conn {
+        padding: 10px;
+        border-radius: var(--rs);
+        border: 1px solid var(--border);
+        background: var(--card);
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .set-conn .ok {
+        color: var(--green);
+        font-weight: 600;
+      }
+      .set-conn .no {
+        color: var(--red);
+      }
+
+      /* ─── Toast ─── */
+      .toast {
+        position: fixed;
+        top: 12px;
+        left: 50%;
+        z-index: 999;
+        transform: translateX(-50%) translateY(-100px);
+        padding: 10px 18px;
+        border-radius: var(--rs);
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        max-width: 85vw;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .toast.on {
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast.ok {
+        border-left: 3px solid var(--green);
+      }
+      .toast.err {
+        border-left: 3px solid var(--red);
+      }
+      .toast.info {
+        border-left: 3px solid var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ═══ Loading ═══ -->
+    <div id="loading">
+      <div class="ld-logo">🎬 AniPilot</div>
+      <div class="ld-spin"></div>
+      <div class="ld-hint" id="ld-hint">Подключение...</div>
+    </div>
+
+    <!-- ═══ App ═══ -->
+    <div id="app">
+      <!-- Header -->
+      <div class="hdr">
+        <div class="hdr-left">
+          <span class="hdr-logo">AniPilot</span>
+          <span class="hdr-ai">⚡AI</span>
+        </div>
+        <div class="hdr-right">
+          <span class="status-dot off" id="h-dot"></span>
+          <span class="status-txt" id="h-status">—</span>
+        </div>
+      </div>
+
+      <!-- Offline banner -->
+      <div class="offline-banner" id="offline-banner">
+        ⚠️ Скрипт офлайн — команды в очереди. Откройте animix.lol
+      </div>
+
+      <!-- Content -->
+      <div class="main" id="main-scroll">
+        <!-- Now Playing -->
+        <div class="now-playing" id="np">
+          <div class="np-title" id="np-title"></div>
+          <div class="np-info" id="np-info"></div>
+          <div class="np-bar">
+            <div class="np-fill" id="np-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- TAB: Search -->
+        <div class="tab on" id="t-search">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input
+              class="search-input"
+              id="q"
+              type="text"
+              placeholder="Название, описание, персонаж..."
+              autocomplete="off"
+            />
+          </div>
+          <div class="ep-row">
+            <input
+              class="ep-input"
+              id="s-inp"
+              type="number"
+              min="1"
+              value="1"
+              placeholder="Сезон"
+            />
+            <input
+              class="ep-input"
+              id="e-inp"
+              type="number"
+              min="1"
+              value="1"
+              placeholder="Серия"
+            />
+          </div>
+          <button class="btn-go" id="btn-go">✨ Найти и смотреть</button>
+          <div id="steps" class="steps"></div>
+          <div id="results" class="results"></div>
+          <div id="confirm" class="confirm"></div>
+        </div>
+
+        <!-- TAB: Marathon -->
+        <div class="tab" id="t-marathon">
+          <div id="mr-list"></div>
+        </div>
+
+        <!-- TAB: History -->
+        <div class="tab" id="t-history">
+          <div id="hist"></div>
+        </div>
+
+        <!-- TAB: Stats -->
+        <div class="tab" id="t-stats">
+          <div class="stats-big">
+            <div class="stats-val" id="st-time">0м</div>
+            <div class="stats-label">Сегодня</div>
+          </div>
+          <div class="stats-row">
+            <div class="stats-cell">
+              <div
+                class="stats-cell-val"
+                style="color: var(--accent)"
+                id="st-binge"
+              >
+                0
+              </div>
+              <div class="stats-cell-lbl">серий</div>
+            </div>
+            <div class="stats-cell">
+              <div
+                class="stats-cell-val"
+                style="color: var(--accent2)"
+                id="st-total"
+              >
+                0
+              </div>
+              <div class="stats-cell-lbl">всего ч</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div
+            id="st-now"
+            style="text-align: center; font-size: 12px; color: var(--text2)"
+          ></div>
+        </div>
+
+        <!-- TAB: Settings -->
+        <div class="tab" id="t-settings">
+          <div class="set-conn" id="set-conn"></div>
+          <div class="set-row">
+            <div>
+              <div class="set-lbl">⚠️ Крэши</div>
+              <div class="set-desc">Уведомлять при ошибке видео</div>
+            </div>
+            <label class="toggle"
+              ><input type="checkbox" id="set-crash" checked /><span
+                class="toggle-slider"
+              ></span
+            ></label>
+          </div>
+          <div class="set-row">
+            <div>
+              <div class="set-lbl">🎬 Марафон</div>
+              <div class="set-desc">Обрыв / завершение</div>
+            </div>
+            <label class="toggle"
+              ><input type="checkbox" id="set-marathon" checked /><span
+                class="toggle-slider"
+              ></span
+            ></label>
+          </div>
+          <div class="set-row">
+            <div>
+              <div class="set-lbl">🔌 Офлайн</div>
+              <div class="set-desc">Скрипт не отвечает 10+ мин</div>
+            </div>
+            <label class="toggle"
+              ><input type="checkbox" id="set-offline" checked /><span
+                class="toggle-slider"
+              ></span
+            ></label>
+          </div>
+          <div class="set-row">
+            <div>
+              <div class="set-lbl">📊 Дайджест</div>
+              <div class="set-desc">Ежедневная статистика</div>
+            </div>
+            <label class="toggle"
+              ><input type="checkbox" id="set-digest" checked /><span
+                class="toggle-slider"
+              ></span
+            ></label>
+          </div>
+          <div class="divider"></div>
+          <button
+            class="btn btn-y"
+            id="btn-save-set"
+            style="width: 100%; text-align: center"
+          >
+            💾 Сохранить
+          </button>
+          <div
+            style="
+              text-align: center;
+              margin-top: 14px;
+              font-size: 9px;
+              color: var(--text2);
+              opacity: 0.5;
+            "
+          >
+            AniPilot v5 · Telegram
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Nav -->
+      <nav class="nav">
+        <button class="nav-btn on" data-t="search">
+          <span class="ico">🔍</span>Поиск
+        </button>
+        <button class="nav-btn" data-t="marathon" style="position: relative">
+          <span class="ico">🎬</span>Марафон<span
+            class="nav-badge"
+            id="mr-badge"
+            style="display: none"
+            >0</span
+          >
+        </button>
+        <button class="nav-btn" data-t="history">
+          <span class="ico">🕐</span>История
+        </button>
+        <button class="nav-btn" data-t="stats">
+          <span class="ico">📊</span>Стата
+        </button>
+        <button class="nav-btn" data-t="settings">
+          <span class="ico">⚙️</span>Настр.
+        </button>
+      </nav>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+      /* ═══════════════════════════════════════
+   AniPilot Mini App
+   ═══════════════════════════════════════ */
+      (function () {
+        "use strict";
+
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+          tg.ready();
+          tg.expand();
+          tg.enableClosingConfirmation?.();
+        }
+
+        /* ── Theme ── */
+        function applyTgTheme() {
+          if (!tg?.themeParams) return;
+          const p = tg.themeParams;
+          const r = document.documentElement.style;
+          if (p.bg_color) r.setProperty("--bg", p.bg_color);
+          if (p.secondary_bg_color) {
+            r.setProperty("--bg2", p.secondary_bg_color);
+            r.setProperty("--card", p.secondary_bg_color);
+          }
+          if (p.text_color) r.setProperty("--text", p.text_color);
+          if (p.hint_color) r.setProperty("--text2", p.hint_color);
+          if (p.link_color) r.setProperty("--accent", p.link_color);
+          if (p.button_color) r.setProperty("--accent", p.button_color);
+        }
+        applyTgTheme();
+        if (tg) tg.onEvent("themeChanged", applyTgTheme);
+
+        /* ── API ── */
+        const BASE = location.origin;
+        const initData = tg?.initData || "";
+
+        async function api(path, opts = {}) {
+          const url = BASE + "/api" + path;
+          const headers = { "Content-Type": "application/json" };
+          if (initData) headers["X-Telegram-Init-Data"] = initData;
+
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const r = await fetch(url, {
+                method: opts.method || (opts.body ? "POST" : "GET"),
+                headers,
+                body: opts.body ? JSON.stringify(opts.body) : undefined,
+                signal: AbortSignal.timeout(20000 + attempt * 10000),
+              });
+              const d = await r.json();
+              if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+              return d;
+            } catch (e) {
+              if (attempt === 2) throw e;
+              await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+            }
+          }
+        }
+
+        /* ── State ── */
+        let S = {
+          scriptOnline: false,
+          currentAnime: null,
+          marathonQueue: [],
+          marathonOn: false,
+          marathonIdx: 0,
+          history: [],
+          bingeToday: 0,
+          watchMinutes: 0,
+          isPlaying: false,
+          videoTime: 0,
+          videoDuration: 0,
+          connected: false,
+        };
+
+        let settings = {
+          notify_crash: true,
+          notify_marathon: true,
+          notify_offline: true,
+          notify_digest: true,
+        };
+
+        /* ── DOM ── */
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => [...document.querySelectorAll(s)];
+        const esc = (s) => {
+          const d = document.createElement("div");
+          d.textContent = s;
+          return d.innerHTML;
+        };
+
+        /* ── Toast ── */
+        let toastTimer = null;
+        function toast(msg, type = "info") {
+          const el = $("#toast");
+          el.className = `toast ${type}`;
+          el.innerHTML = msg;
+          clearTimeout(toastTimer);
+          requestAnimationFrame(() => el.classList.add("on"));
+          toastTimer = setTimeout(() => el.classList.remove("on"), 3500);
+        }
+
+        /* ── Init ── */
+        async function init() {
+          const hint = $("#ld-hint");
+
+          try {
+            hint.textContent = "Загрузка данных...";
+            const [stateRes, settRes] = await Promise.all([
+              api("/webapp/state"),
+              api("/webapp/settings"),
+            ]);
+
+            if (stateRes.ok && stateRes.state) {
+              const st = stateRes.state;
+              S.scriptOnline = st.scriptOnline || false;
+              S.currentAnime = st.current_anime || null;
+              S.marathonQueue = st.marathon_queue || [];
+              S.marathonOn = st.marathon_on || false;
+              S.marathonIdx = st.marathon_idx || 0;
+              S.history = st.history || [];
+              S.bingeToday = st.binge_today || 0;
+              S.watchMinutes = st.watch_minutes || 0;
+              S.isPlaying = st.is_playing || false;
+              S.videoTime = st.video_time || 0;
+              S.videoDuration = st.video_duration || 0;
+              S.connected = true;
+            }
+
+            if (settRes.ok) {
+              S.connected = settRes.connected;
+              Object.assign(settings, settRes.settings || {});
+            }
+
+            // Show app
+            $("#loading").classList.add("hide");
+            setTimeout(() => ($("#loading").style.display = "none"), 500);
+            $("#app").style.display = "flex";
+
+            updateUI();
+            startPolling();
+          } catch (e) {
+            hint.textContent = "Ошибка: " + e.message;
+            hint.style.color = "#fca5a5";
+            // Retry
+            setTimeout(init, 5000);
+          }
+        }
+
+        /* ── UI Update ── */
+        function updateUI() {
+          // Status
+          const dot = $("#h-dot");
+          const stxt = $("#h-status");
+          dot.className = "status-dot " + (S.scriptOnline ? "on" : "off");
+          stxt.textContent = S.scriptOnline ? "Онлайн" : "Офлайн";
+          $("#offline-banner").classList.toggle(
+            "on",
+            !S.scriptOnline && S.connected,
+          );
+
+          // Now Playing
+          const np = $("#np");
+          if (S.currentAnime?.title && S.scriptOnline) {
+            np.classList.add("on");
+            $("#np-title").textContent =
+              (S.isPlaying ? "▶ " : "⏸ ") + S.currentAnime.title;
+            $("#np-info").textContent =
+              `С${S.currentAnime.season || "?"}Е${S.currentAnime.episode || "?"}`;
+            const pct =
+              S.videoDuration > 0
+                ? Math.min(100, (S.videoTime / S.videoDuration) * 100)
+                : 0;
+            $("#np-fill").style.width = pct + "%";
+          } else {
+            np.classList.remove("on");
+          }
+
+          // Marathon badge
+          const badge = $("#mr-badge");
+          if (S.marathonQueue.length > 0) {
+            badge.style.display = "flex";
+            badge.textContent = S.marathonQueue.length;
+          } else {
+            badge.style.display = "none";
+          }
+
+          // Stats
+          const min = S.watchMinutes || 0;
+          $("#st-time").textContent =
+            min < 60
+              ? min + "м"
+              : Math.floor(min / 60) +
+                "ч" +
+                (min % 60 ? " " + (min % 60) + "м" : "");
+          $("#st-binge").textContent = S.bingeToday || 0;
+          $("#st-total").textContent = Math.round(min / 60) || 0;
+
+          const stNow = $("#st-now");
+          if (S.currentAnime?.title) {
+            stNow.innerHTML = `Сейчас: <b>${esc(S.currentAnime.title)}</b><br>${S.isPlaying ? "▶" : "⏸"}`;
+          } else {
+            stNow.textContent = "Ничего не воспроизводится";
+          }
+
+          // Settings
+          $("#set-crash").checked = settings.notify_crash;
+          $("#set-marathon").checked = settings.notify_marathon;
+          $("#set-offline").checked = settings.notify_offline;
+          $("#set-digest").checked = settings.notify_digest;
+          $("#set-conn").innerHTML = S.connected
+            ? '<span class="ok">✅ Скрипт привязан</span>'
+            : '<span class="no">❌ Не привязан — /connect в боте</span>';
+
+          renderHistory();
+          renderMarathon();
+        }
+
+        /* ── Polling ── */
+        let pollTimer = null;
+        function startPolling() {
+          clearInterval(pollTimer);
+          pollTimer = setInterval(async () => {
+            try {
+              const r = await api("/webapp/state");
+              if (!r.ok) return;
+              const st = r.state || {};
+              S.scriptOnline = st.scriptOnline || false;
+              S.currentAnime = st.current_anime || null;
+              S.marathonQueue = st.marathon_queue || [];
+              S.marathonOn = st.marathon_on || false;
+              S.marathonIdx = st.marathon_idx || 0;
+              S.history = st.history || [];
+              S.bingeToday = st.binge_today || 0;
+              S.watchMinutes = st.watch_minutes || 0;
+              S.isPlaying = st.is_playing || false;
+              S.videoTime = st.video_time || 0;
+              S.videoDuration = st.video_duration || 0;
+              updateUI();
+            } catch {}
+          }, 10000);
+        }
+
+        /* ── Tabs ── */
+        $$(".nav-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const t = btn.dataset.t;
+            $$(".nav-btn").forEach((b) => b.classList.toggle("on", b === btn));
+            $$(".tab").forEach((p) =>
+              p.classList.toggle("on", p.id === "t-" + t),
+            );
+            $("#main-scroll").scrollTop = 0;
+          });
+        });
+
+        /* ══════════════════════════════════════
+   SEARCH
+   ══════════════════════════════════════ */
+
+        const qInput = $("#q");
+        const sInput = $("#s-inp");
+        const eInput = $("#e-inp");
+        const goBtn = $("#btn-go");
+
+        goBtn.addEventListener("click", doSearch);
+        qInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") doSearch();
+        });
+
+        function setSteps(list) {
+          const el = $("#steps");
+          el.innerHTML = "";
+          list.forEach((s) => {
+            const d = document.createElement("div");
+            d.className = "step " + (s.state || "");
+            d.innerHTML = `<span style="width:18px;text-align:center;flex-shrink:0">${s.state === "act" ? '<span class="step-spin"></span>' : s.icon}</span><span>${esc(s.text)}</span>`;
+            el.append(d);
+          });
+        }
+
+        async function doSearch() {
+          const q = qInput.value.trim();
+          if (!q) {
+            toast("Введите запрос", "err");
+            return;
+          }
+
+          goBtn.disabled = true;
+          $("#results").innerHTML = "";
+          $("#confirm").classList.remove("on");
+          setSteps([
+            { icon: "🤖", text: "ИИ анализирует...", state: "act" },
+            { icon: "🔍", text: "Поиск", state: "" },
+          ]);
+
+          try {
+            const r = await api("/webapp/search", { body: { query: q } });
+
+            if (!r.found) {
+              setSteps([{ icon: "❌", text: "Не найдено", state: "err" }]);
+              if (r.suggestions?.length)
+                toast("Попробуйте: " + r.suggestions.join(", "), "info");
+              goBtn.disabled = false;
+              return;
+            }
+
+            const ai = r.ai || {};
+            setSteps([
+              {
+                icon: "✅",
+                text: `${ai.title} (${ai.confidence || "?"}%)`,
+                state: "done",
+              },
+              {
+                icon: "✅",
+                text: `${r.results.length} результатов`,
+                state: "done",
+              },
+            ]);
+
+            if (r.results.length === 1 && ai.confidence >= 90) {
+              showConfirm(r.results[0], ai);
+            } else {
+              showResults(r.results, ai);
+            }
+          } catch (e) {
+            setSteps([{ icon: "❌", text: e.message, state: "err" }]);
+            toast(e.message, "err");
+          }
+          goBtn.disabled = false;
+        }
+
+        function showResults(results, ai) {
+          const el = $("#results");
+          el.innerHTML = "";
+          const season = parseInt(sInput.value) || 1;
+          const episode = parseInt(eInput.value) || 1;
+
+          results.forEach((r) => {
+            const card = document.createElement("div");
+            card.className = "rcard";
+
+            let badges = "";
+            if (r.rating)
+              badges += `<span class="badge badge-r">★${r.rating}</span> `;
+            if (r.aiCf)
+              badges += `<span class="badge badge-ai">${r.aiCf}%</span>`;
+
+            card.innerHTML = `
+            <img class="rcard-img" src="${esc(r.image)}" loading="lazy" onerror="this.style.background='var(--border)'">
+            <div class="rcard-info">
+                <div class="rcard-title">${esc(r.title)}</div>
+                <div class="rcard-meta">${esc([r.studio, (r.genres || []).slice(0, 3).join(", ")].filter(Boolean).join(" · "))} ${badges}</div>
+            </div>
+            <div class="rcard-acts">
+                <button class="rcard-btn play" data-act="play">▶</button>
+                <button class="rcard-btn mara" data-act="mara">➕</button>
+            </div>`;
+
+            card
+              .querySelector('[data-act="play"]')
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+                showConfirm(r, ai);
+              });
+            card
+              .querySelector('[data-act="mara"]')
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+                addToMarathon(r, season, episode);
+              });
+            card.addEventListener("click", () => showConfirm(r, ai));
+            el.append(card);
+          });
+        }
+
+        function showConfirm(anime, ai) {
+          const el = $("#confirm");
+          const season = parseInt(sInput.value) || 1;
+          const episode = parseInt(eInput.value) || 1;
+          $("#results").innerHTML = "";
+          $("#steps").innerHTML = "";
+
+          el.innerHTML = `
+        ${anime.image ? `<img class="cfm-img" src="${esc(anime.image)}" onerror="this.style.display='none'">` : ""}
+        <div class="cfm-title">${esc(anime.title)}</div>
+        <div class="cfm-sub">С${season} · Е${episode}${ai?.desc ? '<br><span style="font-size:10px;opacity:.6">' + esc(ai.desc) + "</span>" : ""}</div>
+        <div class="cfm-btns">
+            <button class="btn" id="cfm-back">←</button>
+            <button class="btn btn-m" id="cfm-mara">➕</button>
+            <button class="btn btn-y" id="cfm-go">▶ Смотреть</button>
+        </div>
+        ${!S.scriptOnline ? '<div style="margin-top:10px;font-size:10px;color:#fca5a5">⚠️ Скрипт офлайн — команда в очереди</div>' : ""}`;
+          el.classList.add("on");
+
+          $("#cfm-go").addEventListener("click", () =>
+            goWatch(anime, season, episode),
+          );
+          $("#cfm-mara").addEventListener("click", () => {
+            addToMarathon(anime, season, episode);
+            el.classList.remove("on");
+          });
+          $("#cfm-back").addEventListener("click", () => {
+            el.classList.remove("on");
+            doSearch();
+          });
+        }
+
+        async function goWatch(anime, season, episode) {
+          try {
+            await api("/webapp/command", {
+              body: {
+                type: "navigate",
+                payload: {
+                  animeId: anime.id,
+                  url: anime.url,
+                  title: anime.title,
+                  image: anime.image,
+                  season,
+                  episode,
+                },
+              },
+            });
+            toast(
+              S.scriptOnline
+                ? `▶ ${anime.title} С${season}Е${episode}`
+                : "📋 В очереди — откройте animix.lol",
+              S.scriptOnline ? "ok" : "info",
+            );
+            if (tg)
+              tg.showAlert(
+                S.scriptOnline
+                  ? `Открываю ${anime.title}`
+                  : "Команда в очереди. Откройте animix.lol",
+              );
+            $("#confirm").classList.remove("on");
+          } catch (e) {
+            toast("Ошибка: " + e.message, "err");
+          }
+        }
+
+        /* ══════════════════════════════════════
+   MARATHON
+   ══════════════════════════════════════ */
+
+        async function addToMarathon(anime, season, episode) {
+          try {
+            await api("/webapp/marathon", {
+              body: {
+                action: "add",
+                payload: {
+                  id: anime.id,
+                  title: anime.title,
+                  image: anime.image,
+                  url: anime.url,
+                  season,
+                  ep: episode,
+                },
+              },
+            });
+            S.marathonQueue.push({
+              id: anime.id,
+              title: anime.title,
+              image: anime.image,
+              url: anime.url,
+              season,
+              ep: episode,
+            });
+            toast("➕ " + anime.title, "ok");
+            updateUI();
+          } catch (e) {
+            toast(e.message, "err");
+          }
+        }
+
+        function renderMarathon() {
+          const el = $("#mr-list");
+          const q = S.marathonQueue;
+
+          if (!q.length) {
+            el.innerHTML =
+              '<div class="mr-empty">🎬 Марафон пуст<br><span style="font-size:10px;opacity:.6">Добавьте через поиск →</span></div>';
+            return;
+          }
+
+          let html = '<div class="mr-list">';
+          q.forEach((it, i) => {
+            const active = S.marathonOn && i === S.marathonIdx;
+            html += `<div class="mr-item ${active ? "active" : ""}">
+            <img class="mr-img" src="${esc(it.image || "")}" loading="lazy" onerror="this.style.display='none'">
+            <div class="mr-info">
+                <div class="mr-name">${i + 1}. ${esc(it.title)}</div>
+                <div class="mr-ep">С${it.season || 1}Е${it.ep || 1}${active ? " ▶" : ""}</div>
+            </div>
+            <div class="mr-acts">
+                <button class="mr-btn" onclick="mrAction('up','${it.id}')">↑</button>
+                <button class="mr-btn" onclick="mrAction('down','${it.id}')">↓</button>
+                <button class="mr-btn del" onclick="mrAction('rm','${it.id}')">✕</button>
+            </div>
+        </div>`;
+          });
+          html += "</div>";
+
+          html += '<div class="mr-controls">';
+          if (S.marathonOn) {
+            html += `<button class="btn btn-d" onclick="mrCmd('stop')">⏹ Стоп</button>`;
+            html += `<button class="btn btn-y" onclick="mrCmd('next')">⏭ Следующий</button>`;
+          } else {
+            html += `<button class="btn btn-y" onclick="mrCmd('start')">▶ Старт</button>`;
+            html += `<button class="btn btn-d" onclick="mrCmd('clear')">🗑 Очистить</button>`;
+          }
+          html += "</div>";
+
+          el.innerHTML = html;
+        }
+
+        window.mrAction = async function (action, id) {
+          const q = [...S.marathonQueue];
+
+          if (action === "rm") {
+            S.marathonQueue = q.filter((x) => x.id !== id);
+            try {
+              await api("/webapp/marathon", {
+                body: { action: "remove", payload: { id } },
+              });
+            } catch {}
+          } else if (action === "up") {
+            const i = q.findIndex((x) => x.id === id);
+            if (i > 0) {
+              [q[i - 1], q[i]] = [q[i], q[i - 1]];
+              S.marathonQueue = q;
+            }
+            try {
+              await api("/webapp/marathon", {
+                body: {
+                  action: "reorder",
+                  payload: { queue: S.marathonQueue },
+                },
+              });
+            } catch {}
+          } else if (action === "down") {
+            const i = q.findIndex((x) => x.id === id);
+            if (i >= 0 && i < q.length - 1) {
+              [q[i], q[i + 1]] = [q[i + 1], q[i]];
+              S.marathonQueue = q;
+            }
+            try {
+              await api("/webapp/marathon", {
+                body: {
+                  action: "reorder",
+                  payload: { queue: S.marathonQueue },
+                },
+              });
+            } catch {}
+          }
+
+          updateUI();
+        };
+
+        window.mrCmd = async function (action) {
+          try {
+            await api("/webapp/marathon", { body: { action } });
+            if (action === "start") {
+              S.marathonOn = true;
+              S.marathonIdx = 0;
+            }
+            if (action === "stop") S.marathonOn = false;
+            if (action === "clear") {
+              S.marathonQueue = [];
+              S.marathonOn = false;
+            }
+            if (action === "next") {
+              S.marathonIdx++;
+            }
+            const hint = !S.scriptOnline ? " (откройте animix.lol)" : "";
+            toast(
+              {
+                start: "▶ Марафон!",
+                stop: "⏹ Стоп",
+                next: "⏭ Следующий",
+                clear: "🗑 Очищено",
+              }[action] + hint,
+              "ok",
+            );
+            updateUI();
+          } catch (e) {
+            toast(e.message, "err");
+          }
+        };
+
+        /* ══════════════════════════════════════
+   HISTORY
+   ══════════════════════════════════════ */
+
+        function renderHistory() {
+          const el = $("#hist");
+          const h = S.history || [];
+
+          if (!h.length) {
+            el.innerHTML = '<div class="empty">📭 История пуста</div>';
+            return;
+          }
+
+          el.innerHTML = "";
+          h.forEach((it) => {
+            const d = document.createElement("div");
+            d.className = "hist-item";
+            d.innerHTML = `
+            <img class="hist-img" src="${esc(it.image || "")}" loading="lazy" onerror="this.style.display='none'">
+            <div class="hist-info">
+                <div class="hist-name">${esc(it.title || "")}</div>
+                <div class="hist-meta">${esc(it.genres || "")}</div>
+            </div>
+            <div class="hist-ep">С${it.season || 1}Е${it.episode || 1}</div>`;
+            d.addEventListener("click", () => {
+              qInput.value = it.title;
+              sInput.value = it.season || 1;
+              eInput.value = it.episode || 1;
+              $$(".nav-btn")[0].click(); // go to search tab
+              doSearch();
+            });
+            el.append(d);
+          });
+        }
+
+        /* ══════════════════════════════════════
+   SETTINGS
+   ══════════════════════════════════════ */
+
+        $("#btn-save-set").addEventListener("click", async () => {
+          const s = {
+            notify_crash: $("#set-crash").checked,
+            notify_marathon: $("#set-marathon").checked,
+            notify_offline: $("#set-offline").checked,
+            notify_digest: $("#set-digest").checked,
+          };
+          try {
+            await api("/webapp/settings", { body: s });
+            Object.assign(settings, s);
+            toast("✅ Сохранено", "ok");
+          } catch (e) {
+            toast(e.message, "err");
+          }
+        });
+
+        /* ══════════════════════════════════════
+   INIT
+   ══════════════════════════════════════ */
+
+        // HapticFeedback
+        function haptic(type) {
+          try {
+            tg?.HapticFeedback?.impactOccurred?.(type || "light");
+          } catch {}
+        }
+
+        // Wrap nav clicks with haptic
+        $$(".nav-btn").forEach((b) =>
+          b.addEventListener("click", () => haptic("light")),
+        );
+        goBtn.addEventListener("click", () => haptic("medium"));
+
+        // Start
+        init();
+      })();
+    </script>
+  </body>
+</html>
