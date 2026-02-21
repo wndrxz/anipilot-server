@@ -1,0 +1,18 @@
+{
+  "name": "anipilot-server",
+  "version": "1.0.0",
+  "description": "AniPilot Telegram Backend — AI Anime Navigator",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
